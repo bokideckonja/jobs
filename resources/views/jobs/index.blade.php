@@ -20,8 +20,9 @@
                         <tr>
                             <th scope="col">#</th>
                             <th scope="col">Title</th>
-                            
+                            @auth
                             <th scope="col">Status</th>
+                            @endauth
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
@@ -30,7 +31,9 @@
                         <tr>
                             <th scope="row">{{ $job->id }}</th>
                             <td>{{ $job->title }}</td>
+                            @auth
                             <td>{{ $job->status }}</td>
+                            @endauth
                             
                             <td>
                                 <a href="{{ url('/jobs/'.$job->id) }}">view</a>&nbsp;
