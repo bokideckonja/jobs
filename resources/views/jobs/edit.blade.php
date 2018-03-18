@@ -4,12 +4,10 @@
 <div class="container">
     <div class="row">
         <div class="col-md-10 col-md-offset-1">
+            @include('partials.alert')
             <div class="panel panel-default">
                 <div class="panel-heading">Edit job</div>
-
                 <div class="panel-body">
-                    @include('partials.alert')
-
                     <form class="form-horizontal" method="POST" action="{{ url('/jobs/'.$job->id) }}">
                         {{ csrf_field() }}
                         {{ method_field('PUT') }}

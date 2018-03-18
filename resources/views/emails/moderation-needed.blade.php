@@ -1,11 +1,16 @@
 @component('mail::message')
-# HR posted a job
+# HR posted the following job
 
-The body of your message.
+#### Title:
+{{ $job->title }}
 
-@component('mail::button', ['url' => ''])
-Button Text
-@endcomponent
+#### Description:
+{{ $job->description }}
+
+
+Select desired action for this job:
+1. [Publish it]({{ url('/jobs/approve/'.$job->moderate_token) }})
+2. [Send to spam]({{ url('/jobs/spam/'.$job->moderate_token) }})
 
 Thanks,<br>
 {{ config('app.name') }}

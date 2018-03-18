@@ -15,7 +15,7 @@ class JobsController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth', ['except' => ['create', 'store']]);
+        $this->middleware('auth', ['except' => ['index', 'show', 'create', 'store']]);
     }
 
     /**
@@ -25,8 +25,12 @@ class JobsController extends Controller
      */
     public function index()
     {
-        // Display all jobs
-        $jobs = Job::all();
+        // If logged in display all jobs, if not only approved
+        if(auth()->check()){
+            $jobs = Job::paginate();
+        }else{
+            $jobs = Job::approved()->paginate();
+        }
 
         return view('jobs.index', compact('jobs'));
     }
@@ -80,15 +84,16 @@ class JobsController extends Controller
             return back();
         }
 
-
-
         // If this is first job post for given email, dispatch event
         if($first){
             event(new FirstJobPosted($job));
         }
 
+        // Flash success message
+        session()->flash('flash-message', 'Job posted successfully.');
+
         // Return back
-        return back();
+        return redirect('/');
     }
 
     /**
@@ -99,7 +104,12 @@ class JobsController extends Controller
      */
     public function show(Job $job)
     {
-        //
+        // Prevent not authorised users to see any job that is not approved
+        if($job->status == 'approved' || auth()->check()){
+            return view('jobs.show', compact('job'));
+        }
+
+        abort(404);
     }
 
     /**
@@ -157,14 +167,77 @@ class JobsController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Approve the job post via moderate_token
+     *
+     * @param  string  $token
+     * @return \Illuminate\Http\Response
+     */
+    public function tokenApprove($token)
+    {
+        $job = Job::where('moderate_token',$token)->firstOrFail();
+
+        $job->moderate_token = null;
+        $job->status = 'approved';
+
+        // Try and save to DB.
+        try{
+            $job->save();
+            // Flash success message
+            session()->flash('flash-message', 'Job approved successfully.');
+        }catch(\Exception $e){
+            // Flash error message
+            session()->flash('flash-message', 'DB error approving job.');
+            session()->flasj('flash-level', 'danger');
+        }
+
+        return redirect('/');
+    }
+
+    /**
+     * Send job post to spam via moderate_token
+     *
+     * @param  string  $token
+     * @return \Illuminate\Http\Response
+     */
+    public function tokenSpam($token)
+    {
+        $job = Job::where('moderate_token',$token)->firstOrFail();
+
+        $job->moderate_token = null;
+        $job->status = 'spam';
+
+        // Try and save to DB.
+        try{
+            $job->save();
+            // Flash success message
+            session()->flash('flash-message', 'Job sent to spam successfully.');
+        }catch(\Exception $e){
+            // Flash error message
+            session()->flash('flash-message', 'DB error sending job to spam.');
+            session()->flasj('flash-level', 'danger');
+        }
+
+        return redirect('/');
+    }
+
+    /**
+     * Delete job from DB.
      *
      * @param  \App\Job  $job
      * @return \Illuminate\Http\Response
      */
     public function destroy(Job $job)
     {
-        $job->delete();
-        return back();
+        try{
+            $job->delete();
+            // Flash success message
+            session()->flash('flash-message', 'Job deleted successfully.');
+        }catch(\Exception $e){
+            // Flash error message
+            session()->flash('flash-message', 'DB error deleting job.');
+            session()->flasj('flash-level', 'danger');
+        }
+
+        return redirect('/');
     }
 }

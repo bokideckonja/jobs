@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Job;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -12,13 +13,18 @@ class ModerationNeeded extends Mailable
     use Queueable, SerializesModels;
 
     /**
+    * This get's passed to markdown mail
+    */
+    public $job;
+
+    /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(Job $job)
     {
-        //
+        $this->job = $job;
     }
 
     /**
